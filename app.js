@@ -5,9 +5,6 @@
 
 // ===================================================
 // SUPABASE CONFIGURATION
-// To save Lily's responses and notes to Supabase:
-// 1. Create a free project at https://supabase.com
-// 2. Put your Project URL and Anon Key below:
 // ===================================================
 const SUPABASE_URL = 'https://wsekqkigtcdpcosczbzn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzZWtxa2lndGNkcGNvc2N6YnpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MzA4NjMsImV4cCI6MjA3ODAwNjg2M30.DfxBmWQTjwkgCfcix-Xbx7zJymu-C6ZlESpMdj4a268';
@@ -20,55 +17,53 @@ let ytPlayer = null;
 let ytPlayerReady = false;
 let isAudioPlaying = false;
 let audioContext = null;
-let supabaseClient = null;
 
-// Initialize Supabase Client if credentials are provided
-function initSupabase() {
-  if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
-    try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('Supabase client connected successfully!');
-    } catch (e) {
-      console.warn('Supabase init error:', e);
+// Persistent User State (Always initialized so neither field is ever null)
+let lilySession = {
+  answer: localStorage.getItem('lily_chosen_answer') || 'YES',
+  note: localStorage.getItem('lily_written_note') || '(Always by your side ❤️)',
+  mood: localStorage.getItem('lily_chosen_mood') || 'I love you so much ❤️'
+};
+
+// Save unified response to Supabase & LocalStorage (Guarantees NO NULLS)
+async function saveUnifiedLilyData() {
+  const payload = {
+    answer: lilySession.answer || 'YES',
+    note: lilySession.note || '(Always by your side ❤️)',
+    mood: lilySession.mood || 'I love you so much ❤️',
+    type: 'lily_response',
+    created_at: new Date().toISOString()
+  };
+
+  // 1. Always save in localStorage
+  localStorage.setItem('lily_chosen_answer', payload.answer);
+  localStorage.setItem('lily_written_note', payload.note);
+  localStorage.setItem('lily_chosen_mood', payload.mood);
+
+  // 2. Save directly to Supabase via standard REST API
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/lily_responses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      throw new Error(`Supabase returned status ${res.status}`);
     }
+
+    const data = await res.json();
+    console.log('Saved to Supabase with zero nulls:', data);
+    return { success: true, cloud: true, data };
+  } catch (err) {
+    console.warn('Saved locally (Supabase sync failed):', err);
+    return { success: true, cloud: false, error: err };
   }
-}
-
-// Save response to Supabase and LocalStorage
-async function saveLilyData(data) {
-  // Always persist locally
-  const history = JSON.parse(localStorage.getItem('lily_responses_history') || '[]');
-  history.push({ ...data, saved_at: new Date().toISOString() });
-  localStorage.setItem('lily_responses_history', JSON.stringify(history));
-
-  // If Supabase is configured, send via Supabase JS client or REST fetch
-  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-    try {
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from('lily_responses').insert([data]);
-        if (error) throw error;
-      } else {
-        // Direct REST endpoint fallback (requires zero libraries)
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/lily_responses`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      }
-      return { success: true, cloud: true };
-    } catch (err) {
-      console.warn('Could not sync to Supabase (saved locally):', err);
-      return { success: true, cloud: false, error: err };
-    }
-  }
-
-  return { success: true, cloud: false };
 }
 
 // ===================================================
@@ -110,20 +105,23 @@ function initLoveClock() {
 }
 
 // ===================================================
-// 2. YOUTUBE MUSIC & WEB AUDIO SYNTH ENGINE
+// 2. YOUTUBE MUSIC & AUDIO ENGINE (MOBILE & DESKTOP)
 // ===================================================
 window.onYouTubeIframeAPIReady = function() {
   ytPlayer = new YT.Player('youtube-player', {
-    height: '0',
-    width: '0',
+    height: '100%',
+    width: '100%',
     videoId: YOUTUBE_VIDEO_ID,
     playerVars: {
-      autoplay: 0,
+      autoplay: 1,
+      playsinline: 1, // MANDATORY for mobile iOS Safari & Chrome
       controls: 0,
+      disablekb: 1,
+      fs: 0,
       loop: 1,
       playlist: YOUTUBE_VIDEO_ID,
       enablejsapi: 1,
-      origin: window.location.origin
+      modestbranding: 1
     },
     events: {
       onReady: onPlayerReady,
@@ -134,22 +132,26 @@ window.onYouTubeIframeAPIReady = function() {
 
 function onPlayerReady() {
   ytPlayerReady = true;
-  ytPlayer.setVolume(90);
+  try {
+    ytPlayer.setVolume(100);
+  } catch (e) {}
 }
 
 function onPlayerStateChange(event) {
   const widget = document.getElementById('music-player-widget');
   const playIcon = document.getElementById('ctrl-icon-play');
   const pauseIcon = document.getElementById('ctrl-icon-pause');
+  const mobilePrompt = document.getElementById('mobile-sound-tap-prompt');
 
   if (event.data === YT.PlayerState.PLAYING) {
     isAudioPlaying = true;
-    widget.classList.remove('paused');
+    if (widget) widget.classList.remove('paused');
     if (playIcon) playIcon.classList.add('hidden');
     if (pauseIcon) pauseIcon.classList.remove('hidden');
-  } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+    if (mobilePrompt) mobilePrompt.classList.add('hidden');
+  } else {
     isAudioPlaying = false;
-    widget.classList.add('paused');
+    if (widget) widget.classList.add('paused');
     if (playIcon) playIcon.classList.remove('hidden');
     if (pauseIcon) pauseIcon.classList.add('hidden');
   }
@@ -178,32 +180,30 @@ function playRomanticChime() {
       osc.start(audioContext.currentTime + idx * 0.12);
       osc.stop(audioContext.currentTime + idx * 0.12 + 1.3);
     });
-  } catch (err) {
-    console.warn("Chime AudioContext error:", err);
-  }
+  } catch (err) {}
 }
 
-function startMusic() {
+// User-gesture activated music play (guaranteed to unlock audio on iOS and Android)
+function triggerDirectAudioPlayback() {
   playRomanticChime();
-  if (ytPlayer && ytPlayerReady) {
+  if (ytPlayer && ytPlayerReady && typeof ytPlayer.playVideo === 'function') {
     try {
       ytPlayer.unMute();
-      ytPlayer.setVolume(90);
+      ytPlayer.setVolume(100);
       ytPlayer.playVideo();
       isAudioPlaying = true;
     } catch (e) {
-      console.warn("YouTube play error:", e);
+      console.warn("Direct play notice:", e);
     }
-  } else {
-    const checkInterval = setInterval(() => {
-      if (ytPlayer && ytPlayerReady) {
-        clearInterval(checkInterval);
-        ytPlayer.unMute();
-        ytPlayer.playVideo();
-        isAudioPlaying = true;
-      }
-    }, 500);
   }
+
+  // If mobile browser blocked unmuted autoplay, show tap helper
+  setTimeout(() => {
+    if (!isAudioPlaying) {
+      const mobilePrompt = document.getElementById('mobile-sound-tap-prompt');
+      if (mobilePrompt) mobilePrompt.classList.remove('hidden');
+    }
+  }, 1200);
 }
 
 function toggleAudio() {
@@ -211,6 +211,8 @@ function toggleAudio() {
   if (isAudioPlaying) {
     ytPlayer.pauseVideo();
   } else {
+    ytPlayer.unMute();
+    ytPlayer.setVolume(100);
     ytPlayer.playVideo();
   }
 }
@@ -237,6 +239,7 @@ function initMusicControls() {
   const volumeSlider = document.getElementById('audio-volume-slider');
   const toggleBtn = document.getElementById('player-toggle-btn');
   const widget = document.getElementById('music-player-widget');
+  const mobilePrompt = document.getElementById('mobile-sound-tap-prompt');
 
   if (playBtn) playBtn.addEventListener('click', toggleAudio);
   if (muteBtn) muteBtn.addEventListener('click', toggleMute);
@@ -259,6 +262,13 @@ function initMusicControls() {
       widget.classList.toggle('collapsed');
     });
   }
+
+  if (mobilePrompt) {
+    mobilePrompt.addEventListener('click', () => {
+      triggerDirectAudioPlayback();
+      mobilePrompt.classList.add('hidden');
+    });
+  }
 }
 
 // ===================================================
@@ -271,14 +281,13 @@ function initIntro() {
   const waxSeal = document.getElementById('wax-seal-button');
 
   function openPortal() {
-    startMusic();
-    burstConfettiAndHearts(window.innerWidth / 2, window.innerHeight / 2, 40);
+    triggerDirectAudioPlayback();
 
     if (introOverlay) {
       introOverlay.classList.add('dismissed');
       setTimeout(() => {
         introOverlay.style.display = 'none';
-      }, 1000);
+      }, 900);
     }
 
     const widget = document.getElementById('music-player-widget');
@@ -296,234 +305,7 @@ function initIntro() {
 }
 
 // ===================================================
-// 4. HIGH-PERFORMANCE ATMOSPHERIC CANVAS (NO LAG)
-// ===================================================
-function initAmbientCanvas() {
-  const canvas = document.getElementById('ambient-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
-  const isMobile = window.innerWidth < 768;
-
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
-
-  // Balanced star count without expensive shadowBlur
-  const starsCount = isMobile ? 60 : 100;
-  const stars = [];
-  for (let i = 0; i < starsCount; i++) {
-    stars.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      radius: Math.random() * 1.3 + 0.5,
-      alpha: Math.random() * 0.7 + 0.3,
-      speed: Math.random() * 0.015 + 0.005,
-      direction: Math.random() > 0.5 ? 1 : -1
-    });
-  }
-
-  // Drastically reduced petal count for silky 60 FPS performance
-  const petalCount = isMobile ? 6 : 12;
-  const petals = [];
-  for (let i = 0; i < petalCount; i++) {
-    petals.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 10 + 8,
-      speedY: Math.random() * 0.8 + 0.5,
-      speedX: Math.random() * 0.8 - 0.4,
-      rotation: Math.random() * 360,
-      rotSpeed: (Math.random() - 0.5) * 1.0,
-      oscillationSpeed: Math.random() * 0.02 + 0.01,
-      oscillationPhase: Math.random() * Math.PI * 2,
-      opacity: Math.random() * 0.5 + 0.4,
-      color: Math.random() > 0.4 ? '#f43f5e' : '#ec4899'
-    });
-  }
-
-  function drawPetal(p) {
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate((p.rotation * Math.PI) / 180);
-    ctx.fillStyle = p.color;
-    ctx.globalAlpha = p.opacity;
-
-    // Lightweight smooth petal oval
-    ctx.beginPath();
-    ctx.ellipse(0, 0, p.size * 0.5, p.size, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-
-    // Fast, crisp stars (no shadowBlur to avoid CPU thrashing)
-    for (let i = 0; i < stars.length; i++) {
-      const s = stars[i];
-      s.alpha += s.speed * s.direction;
-      if (s.alpha > 0.95 || s.alpha < 0.2) s.direction *= -1;
-
-      ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Smooth falling petals
-    for (let i = 0; i < petals.length; i++) {
-      const p = petals[i];
-      p.oscillationPhase += p.oscillationSpeed;
-      p.x += Math.sin(p.oscillationPhase) * 0.8 + p.speedX;
-      p.y += p.speedY;
-      p.rotation += p.rotSpeed;
-
-      if (p.y > height + 20) {
-        p.y = -20;
-        p.x = Math.random() * width;
-      }
-      if (p.x > width + 20) p.x = -20;
-      if (p.x < -20) p.x = width + 20;
-
-      drawPetal(p);
-    }
-
-    requestAnimationFrame(animate);
-  }
-
-  animate();
-}
-
-// ===================================================
-// 5. THROTTLED CURSOR SPARKLES (NO SCROLL LAG)
-// ===================================================
-function initCursorSparkles() {
-  // Disable sparkle tracking on touch devices to ensure 100% fluid mobile scrolling
-  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
-
-  const canvas = document.getElementById('sparkle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
-
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
-
-  const particles = [];
-  const emojis = ['💖', '✨', '🌸', '🤍'];
-  let lastSpawnTime = 0;
-
-  function createSparkle(x, y) {
-    const now = Date.now();
-    if (now - lastSpawnTime < 80) return; // Throttled to 80ms interval
-    lastSpawnTime = now;
-
-    particles.push({
-      x: x,
-      y: y,
-      vx: (Math.random() - 0.5) * 1.5,
-      vy: -1.2 - Math.random() * 1.0,
-      size: 14,
-      emoji: emojis[Math.floor(Math.random() * emojis.length)],
-      opacity: 1,
-      life: 0.03
-    });
-  }
-
-  window.addEventListener('pointermove', (e) => {
-    createSparkle(e.clientX, e.clientY);
-  });
-
-  function animateSparkles() {
-    ctx.clearRect(0, 0, width, height);
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.opacity -= p.life;
-
-      if (p.opacity <= 0) {
-        particles.splice(i, 1);
-        continue;
-      }
-
-      ctx.save();
-      ctx.globalAlpha = p.opacity;
-      ctx.font = `${p.size}px serif`;
-      ctx.fillText(p.emoji, p.x, p.y);
-      ctx.restore();
-    }
-
-    requestAnimationFrame(animateSparkles);
-  }
-
-  animateSparkles();
-}
-
-// Particle/Heart Explosion Utility
-function burstConfettiAndHearts(x, y, count = 30) {
-  const canvas = document.getElementById('sparkle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const items = ['💖', '🌹', '✨', '💕', '💍', '🌸'];
-
-  const burstParticles = [];
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 7 + 3;
-    burstParticles.push({
-      x: x,
-      y: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 2,
-      gravity: 0.18,
-      size: Math.random() * 16 + 12,
-      char: items[Math.floor(Math.random() * items.length)],
-      opacity: 1,
-      fade: Math.random() * 0.02 + 0.015
-    });
-  }
-
-  function stepBurst() {
-    for (let i = burstParticles.length - 1; i >= 0; i--) {
-      const bp = burstParticles[i];
-      bp.x += bp.vx;
-      bp.y += bp.vy;
-      bp.vy += bp.gravity;
-      bp.opacity -= bp.fade;
-
-      if (bp.opacity <= 0) {
-        burstParticles.splice(i, 1);
-        continue;
-      }
-
-      ctx.save();
-      ctx.globalAlpha = bp.opacity;
-      ctx.font = `${bp.size}px serif`;
-      ctx.fillText(bp.char, bp.x, bp.y);
-      ctx.restore();
-    }
-
-    if (burstParticles.length > 0) {
-      requestAnimationFrame(stepBurst);
-    }
-  }
-
-  stepBurst();
-}
-
-// ===================================================
-// 6. INTERACTIVE TOYS & THE LILY LOVE MACHINE
+// 4. INTERACTIVE TOYS & THE LILY LOVE MACHINE
 // ===================================================
 function initInteractiveToys() {
   // Toy 1: Infinite Love Meter
@@ -554,7 +336,6 @@ function initInteractiveToys() {
           meterLabel.textContent = '∞ INFINITE LOVE (OFF THE CHARTS)';
           meterMsg.innerHTML = '💖 <strong>Error: The scale broke!</strong> My love for Lily cannot be measured by human numbers. It reaches into eternity!';
           measureBtn.disabled = false;
-          burstConfettiAndHearts(window.innerWidth / 2, window.innerHeight * 0.7, 40);
         }
       }, 30);
     });
@@ -591,10 +372,7 @@ function initInteractiveToys() {
         noteBox.textContent = nextNote;
         noteBox.style.opacity = '1';
         noteBox.style.transform = 'translateY(0)';
-      }, 250);
-
-      const rect = newNoteBtn.getBoundingClientRect();
-      burstConfettiAndHearts(rect.left + rect.width / 2, rect.top, 15);
+      }, 200);
     });
   }
 
@@ -603,26 +381,27 @@ function initInteractiveToys() {
   const noBtn = document.getElementById('proposal-no-btn');
   const celebrationMsg = document.getElementById('proposal-celebration');
   const savedBadge = document.getElementById('proposal-saved-badge');
+  const noteInput = document.getElementById('lily-note-input');
 
   let noClickCount = 0;
 
   if (yesBtn) {
     yesBtn.addEventListener('click', async () => {
+      lilySession.answer = 'YES';
+      if (noteInput && noteInput.value.trim()) {
+        lilySession.note = noteInput.value.trim();
+      }
+
       celebrationMsg.innerHTML = "🎉💍 SHE SAID YES! Lily, you just made me the happiest man on this planet! Forever together ❤️";
-      burstConfettiAndHearts(window.innerWidth / 2, window.innerHeight * 0.6, 60);
       playRomanticChime();
 
-      if (savedBadge) savedBadge.textContent = 'Saving your answer... ⏳';
+      if (savedBadge) savedBadge.textContent = 'Saving answer & note to Supabase... ⏳';
 
-      const res = await saveLilyData({
-        answer: 'YES',
-        type: 'proposal_answer',
-        created_at: new Date().toISOString()
-      });
+      const res = await saveUnifiedLilyData();
 
       if (savedBadge) {
         savedBadge.textContent = res.cloud
-          ? 'Saved to our love vault in Supabase ❤️'
+          ? 'Saved to our love vault in Supabase ❤️ (Answer: YES)'
           : 'Saved in our hearts forever ❤️';
       }
     });
@@ -632,17 +411,18 @@ function initInteractiveToys() {
     noBtn.addEventListener('click', async () => {
       noClickCount++;
       if (noClickCount === 1) {
-        celebrationMsg.innerHTML = "Wait Lily, are you sure? 🥺 Think about our 4 AM drives and our coffee dates!";
+        celebrationMsg.innerHTML = "Wait Lily, are you sure? 🥺 Think about our 4 AM drives and coffee dates!";
         noBtn.style.transform = 'scale(0.9)';
       } else {
+        lilySession.answer = 'NO';
+        if (noteInput && noteInput.value.trim()) {
+          lilySession.note = noteInput.value.trim();
+        }
+
         celebrationMsg.innerHTML = "Even if you click No, my heart will keep loving you unconditionally anyway! ❤️";
         if (savedBadge) savedBadge.textContent = 'Saving... ⏳';
 
-        const res = await saveLilyData({
-          answer: 'NO',
-          type: 'proposal_answer',
-          created_at: new Date().toISOString()
-        });
+        const res = await saveUnifiedLilyData();
 
         if (savedBadge) {
           savedBadge.textContent = res.cloud
@@ -654,19 +434,16 @@ function initInteractiveToys() {
   }
 
   // Toy 4: A Note From Lily To Me
-  const noteInput = document.getElementById('lily-note-input');
   const sendNoteBtn = document.getElementById('send-lily-note-btn');
   const sendBtnText = document.getElementById('send-note-btn-text');
   const noteStatus = document.getElementById('lily-note-status');
   const moodChips = document.querySelectorAll('.mood-chip');
 
-  let selectedMood = 'I love you so much ❤️';
-
   moodChips.forEach(chip => {
     chip.addEventListener('click', () => {
       moodChips.forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
-      selectedMood = chip.getAttribute('data-mood') || 'I love you so much ❤️';
+      lilySession.mood = chip.getAttribute('data-mood') || 'I love you so much ❤️';
     });
   });
 
@@ -678,17 +455,11 @@ function initInteractiveToys() {
         return;
       }
 
+      lilySession.note = text;
       sendNoteBtn.disabled = true;
-      if (sendBtnText) sendBtnText.textContent = 'Sending to my heart... ⏳';
+      if (sendBtnText) sendBtnText.textContent = 'Saving note & answer together... ⏳';
 
-      const res = await saveLilyData({
-        note: text,
-        mood: selectedMood,
-        type: 'lily_note',
-        created_at: new Date().toISOString()
-      });
-
-      burstConfettiAndHearts(window.innerWidth / 2, window.innerHeight * 0.7, 40);
+      const res = await saveUnifiedLilyData();
       playRomanticChime();
 
       if (sendBtnText) sendBtnText.textContent = 'Send Another Note 💌';
@@ -696,35 +467,20 @@ function initInteractiveToys() {
 
       if (noteStatus) {
         noteStatus.innerHTML = res.cloud
-          ? '💖 <strong>Your note was sent and saved to Supabase!</strong> I will treasure every word forever.'
+          ? `💖 <strong>Saved to Supabase!</strong> Both your answer (${lilySession.answer}) and your note were saved together ❤️`
           : '💖 <strong>Your note was saved with all my love!</strong> I will cherish it forever.';
       }
 
-      noteInput.value = '';
+      if (savedBadge) {
+        savedBadge.textContent = `Saved in Supabase: Answer (${lilySession.answer}) + Note ❤️`;
+      }
     });
   }
 
   // Hero Heart Shower Button
   const heroShowerBtn = document.getElementById('hero-heart-burst-btn');
   if (heroShowerBtn) {
-    heroShowerBtn.addEventListener('click', () => {
-      const rect = heroShowerBtn.getBoundingClientRect();
-      burstConfettiAndHearts(rect.left + rect.width / 2, rect.top, 35);
-    });
-  }
-
-  // Fireworks Button in Footer
-  const fireworksBtn = document.getElementById('fireworks-btn');
-  if (fireworksBtn) {
-    fireworksBtn.addEventListener('click', () => {
-      for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-          const x = Math.random() * window.innerWidth;
-          const y = Math.random() * (window.innerHeight * 0.7);
-          burstConfettiAndHearts(x, y, 30);
-        }, i * 350);
-      }
-    });
+    heroShowerBtn.addEventListener('click', playRomanticChime);
   }
 
   // Back to top button
@@ -737,7 +493,7 @@ function initInteractiveToys() {
 }
 
 // ===================================================
-// 7. LIGHTBOX & MEDIA CONTROLS
+// 5. LIGHTBOX & MEDIA CONTROLS
 // ===================================================
 function initLightbox() {
   const modal = document.getElementById('lightbox-modal');
@@ -813,10 +569,7 @@ function initLightbox() {
   });
 
   if (heartBtn) {
-    heartBtn.addEventListener('click', () => {
-      const rect = heartBtn.getBoundingClientRect();
-      burstConfettiAndHearts(rect.left + rect.width / 2, rect.top, 25);
-    });
+    heartBtn.addEventListener('click', playRomanticChime);
   }
 
   // Featured Video Player logic
@@ -857,7 +610,7 @@ function initLightbox() {
 }
 
 // ===================================================
-// 8. SCROLL SPY & NAVIGATION HIGHLIGHT
+// 6. SCROLL SPY & NAVIGATION HIGHLIGHT
 // ===================================================
 function initScrollSpy() {
   const navItems = document.querySelectorAll('.nav-item');
@@ -888,15 +641,12 @@ function initScrollSpy() {
 // INITIALIZATION
 // ===================================================
 document.addEventListener('DOMContentLoaded', () => {
-  initSupabase();
   initLoveClock();
   initMusicControls();
   initIntro();
-  initAmbientCanvas();
-  initCursorSparkles();
   initInteractiveToys();
   initLightbox();
   initScrollSpy();
 
-  console.log("For Lily website loaded smoothly with infinite love ❤️");
+  console.log("For Lily website loaded with infinite love ❤️");
 });

@@ -19,15 +19,16 @@
 </head>
 <body>
 
-  <!-- Background Canvas for Floating Stars and Rose Petals -->
-  <canvas id="ambient-canvas"></canvas>
-
-  <!-- Interactive Cursor Sparkle Canvas -->
-  <canvas id="sparkle-canvas"></canvas>
-
-  <!-- Hidden YouTube Player Container -->
-  <div id="youtube-container" aria-hidden="true">
-    <div id="youtube-player"></div>
+  <!-- Pure CSS Floating Rose Petals & Ambient Starlight (100% Mobile Safe, Zero Lag, No Canvas Trails) -->
+  <div class="ambient-stars-layer" aria-hidden="true"></div>
+  <div class="ambient-petals-layer" aria-hidden="true">
+    <div class="css-petal p1">🌸</div>
+    <div class="css-petal p2">🌸</div>
+    <div class="css-petal p3">🌸</div>
+    <div class="css-petal p4">🌸</div>
+    <div class="css-petal p5">🌸</div>
+    <div class="css-petal p6">🌸</div>
+    <div class="css-petal p7">🌸</div>
   </div>
 
   <!-- ============================================== -->
@@ -103,6 +104,16 @@
           <input type="range" id="audio-volume-slider" min="0" max="100" value="90" aria-label="Volume">
         </div>
       </div>
+
+      <!-- In-viewport YouTube Player Container for iOS WebKit Support -->
+      <div id="youtube-holder" class="yt-holder">
+        <div id="youtube-player"></div>
+      </div>
+    </div>
+
+    <!-- Mobile Tap-to-Play Helper for iOS -->
+    <div id="mobile-sound-tap-prompt" class="mobile-sound-prompt hidden">
+      <span>▶ Tap to play our song 🎵</span>
     </div>
   </aside>
 

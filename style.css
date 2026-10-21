@@ -72,29 +72,104 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background Atmospheric Canvases */
-#ambient-canvas,
-#sparkle-canvas {
+/* Pure CSS Background Ambient Petals & Starlight (0 Lag, No Smearing Trails on Mobile) */
+.ambient-stars-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: 
+    radial-gradient(1.5px 1.5px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 70px 120px, #fbcfe8, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 150px 220px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 280px 90px, #fef08a, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 350px 320px, #fda4af, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 400px 400px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ambient-petals-layer {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1;
+  overflow: hidden;
+  z-index: 2;
 }
 
-#sparkle-canvas {
-  z-index: 999;
+.css-petal {
+  position: absolute;
+  top: -50px;
+  opacity: 0.6;
+  user-select: none;
+  animation: fallAndSway linear infinite;
+  will-change: transform;
 }
 
-#youtube-container {
-  position: fixed;
-  top: -9999px;
-  left: -9999px;
-  opacity: 0;
-  visibility: hidden;
+.p1 { left: 8%; animation-duration: 9s; animation-delay: 0s; font-size: 1.2rem; }
+.p2 { left: 24%; animation-duration: 12s; animation-delay: 2s; font-size: 1.5rem; }
+.p3 { left: 42%; animation-duration: 10s; animation-delay: 4s; font-size: 1.1rem; }
+.p4 { left: 63%; animation-duration: 13s; animation-delay: 1s; font-size: 1.4rem; }
+.p5 { left: 78%; animation-duration: 11s; animation-delay: 3s; font-size: 1.3rem; }
+.p6 { left: 91%; animation-duration: 14s; animation-delay: 5s; font-size: 1.5rem; }
+.p7 { left: 33%; animation-duration: 15s; animation-delay: 7s; font-size: 1.2rem; }
+
+@keyframes fallAndSway {
+  0% {
+    transform: translateY(-50px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(50vh) translateX(30px) rotate(180deg);
+    opacity: 0.6;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(105vh) translateX(-25px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.yt-holder {
+  width: 2px;
+  height: 2px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  opacity: 0.01;
+  overflow: hidden;
   pointer-events: none;
+  z-index: 0;
+}
+
+.mobile-sound-prompt {
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  margin-top: 6px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);
+  animation: pulsePrompt 1.8s infinite;
+}
+
+@keyframes pulsePrompt {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* Typography Utilities */
