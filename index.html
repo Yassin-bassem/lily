@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For Lily — My Whole World, My Forever Love ❤️</title>
+  <meta name="description" content="A special celestial universe created with all my love for Lily. Loving you since October 24, 2023, and forever to come.">
+  <meta name="theme-color" content="#0d0714">
+
+  <!-- Favicon Heart -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💖</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700;900&family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Canvas for Floating Stars and Rose Petals -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- Interactive Cursor Sparkle Canvas -->
+  <canvas id="sparkle-canvas"></canvas>
+
+  <!-- Hidden YouTube Player Container -->
+  <div id="youtube-container" aria-hidden="true">
+    <div id="youtube-player"></div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- CINEMATIC INTRO OVERLAY / ENVELOPE ENTRANCE   -->
+  <!-- ============================================== -->
+  <div id="intro-overlay" class="intro-overlay">
+    <div class="intro-stars"></div>
+    <div class="intro-card-wrapper">
+      <div class="envelope" id="envelope-trigger">
+        <div class="envelope-back"></div>
+        <div class="envelope-paper">
+          <div class="paper-header">
+            <span class="paper-tag">Private Letter ✨</span>
+            <span class="paper-date">24 · 10 · 2023</span>
+          </div>
+          <h2 class="paper-title">For Lily</h2>
+          <p class="paper-preview">"عارفة لما تحبي حد عشان نفسه... أنا بحبها هي ذات نفسها حرفياً..."</p>
+          <div class="paper-hint">Click anywhere to open my heart 💖</div>
+        </div>
+        <div class="envelope-front"></div>
+        <div class="envelope-flap"></div>
+        <div class="wax-seal" id="wax-seal-button">
+          <span class="seal-icon">❤️</span>
+          <span class="seal-text">LILY</span>
+        </div>
+      </div>
+
+      <div class="intro-instructions">
+        <h1 class="intro-headline">A Universe Created For Lily</h1>
+        <p class="intro-sub">Put your sound on 🎧 & tap the letter to begin our journey</p>
+        <button id="enter-button" class="btn-celestial-primary">
+          <span class="btn-glow"></span>
+          <span class="btn-icon">💌</span>
+          <span>Open Our Story</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- FLOATING MUSIC PLAYER                          -->
+  <!-- ============================================== -->
+  <aside id="music-player-widget" class="music-player-widget collapsed" aria-label="Music Player">
+    <div class="player-toggle-btn" id="player-toggle-btn" title="Toggle Music Player">
+      <div class="mini-equalizer">
+        <span class="eq-bar bar-1"></span>
+        <span class="eq-bar bar-2"></span>
+        <span class="eq-bar bar-3"></span>
+        <span class="eq-bar bar-4"></span>
+      </div>
+      <span class="player-toggle-label">Our Song 🎵</span>
+    </div>
+
+    <div class="player-panel">
+      <div class="vinyl-record" id="vinyl-disc">
+        <img src="media/cafe_together.jpg" alt="Lily & Me" class="vinyl-art">
+        <div class="vinyl-center"></div>
+      </div>
+
+      <div class="player-track-info">
+        <div class="track-badge">Now Playing ❤️</div>
+        <div class="track-title" id="track-title">أنا ضهرك وفي ضهرك ومعاكي</div>
+        <div class="track-artist">بهاء سلطان • Dedicated to Lily</div>
+        <div class="player-controls">
+          <button id="audio-play-pause" class="ctrl-btn play-btn" aria-label="Play or Pause">
+            <svg id="ctrl-icon-play" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="ctrl-icon-pause" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button id="audio-mute-toggle" class="ctrl-btn" aria-label="Mute or Unmute">
+            <svg id="ctrl-icon-sound" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <svg id="ctrl-icon-muted" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27l4.73 4.73H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+          </button>
+          <input type="range" id="audio-volume-slider" min="0" max="100" value="90" aria-label="Volume">
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================== -->
+  <!-- FLOATING QUICK NAVIGATION                      -->
+  <!-- ============================================== -->
+  <nav class="floating-nav" id="floating-nav" aria-label="Main Navigation">
+    <a href="#hero" class="nav-item active" title="Top">✨ Home</a>
+    <a href="#timer-section" class="nav-item" title="Our Time">⏳ Our Clock</a>
+    <a href="#confession-section" class="nav-item" title="The Confession">💬 The Truth</a>
+    <a href="#gallery-section" class="nav-item" title="Moments">📸 Memories</a>
+    <a href="#reasons-section" class="nav-item" title="Why I Love You">💖 Why Lily</a>
+    <a href="#letter-section" class="nav-item" title="Love Letter">💌 Letter</a>
+    <a href="#love-machine-section" class="nav-item" title="Love Experience">🎮 Love & Notes</a>
+  </nav>
+
+  <!-- ============================================== -->
+  <!-- MAIN CONTENT CONTAINER                         -->
+  <!-- ============================================== -->
+  <main class="main-wrapper">
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero-section">
+      <div class="hero-aurora"></div>
+      
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span>Since 24 October 2023 • منذ أول يوم</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="title-sub">To The Love of My Life</span>
+          <span class="title-name shimmer-text">Lily</span>
+          <span class="title-arabic">أنتي مش بس حبيبتي.. أنتي كل دنيتي</span>
+        </h1>
+
+        <p class="hero-description">
+          "I love you so much. I love everything in you. You mean life to me — you are my greatest blessing, my answered prayer, and my whole universe."
+        </p>
+
+        <!-- Dynamic Live Relationship Clock -->
+        <div id="timer-section" class="love-timer-card">
+          <div class="timer-header">
+            <span class="timer-sparkle">✨</span>
+            <h3>We have been in love for:</h3>
+            <span class="timer-sparkle">✨</span>
+          </div>
+
+          <div class="timer-grid">
+            <div class="timer-col">
+              <div class="timer-box">
+                <span class="timer-num" id="days-count">0</span>
+              </div>
+              <span class="timer-lbl">Days</span>
+            </div>
+            <div class="timer-separator">:</div>
+            <div class="timer-col">
+              <div class="timer-box">
+                <span class="timer-num" id="hours-count">00</span>
+              </div>
+              <span class="timer-lbl">Hours</span>
+            </div>
+            <div class="timer-separator">:</div>
+            <div class="timer-col">
+              <div class="timer-box">
+                <span class="timer-num" id="minutes-count">00</span>
+              </div>
+              <span class="timer-lbl">Minutes</span>
+            </div>
+            <div class="timer-separator">:</div>
+            <div class="timer-col">
+              <div class="timer-box">
+                <span class="timer-num" id="seconds-count">00</span>
+              </div>
+              <span class="timer-lbl">Seconds</span>
+            </div>
+          </div>
+
+          <div class="timer-milestone">
+            <span class="heart-pulse">💖</span>
+            <span id="milestone-text">Started on 24/10/2023 · Counting every heartbeat until forever</span>
+          </div>
+        </div>
+
+        <div class="hero-cta-group">
+          <a href="#confession-section" class="btn-hero-primary">
+            <span>See What I Felt When I First Realized</span>
+            <span class="arrow-down">↓</span>
+          </a>
+          <button id="hero-heart-burst-btn" class="btn-hero-secondary">
+            <span>Shower Lily With Love 🌸</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: THE CONFESSION (WHATSAPP SCREENSHOT SHOWCASE) -->
+    <section id="confession-section" class="section confession-section">
+      <div class="section-container">
+        <div class="section-badge">The Moment That Spoke My Soul</div>
+        <h2 class="section-title">The Unfiltered Truth</h2>
+        <p class="section-subtitle">
+          On August 22, 2024 at 5:08 AM, when asked who took my whole heart... I didn't hesitate for a single second.
+        </p>
+
+        <div class="confession-layout">
+          <!-- WhatsApp Mockup Showcase -->
+          <div class="confession-visual-card">
+            <div class="phone-frame">
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <img src="media/whatsapp_confession.jpg" alt="WhatsApp confession message about loving Lily" class="confession-img" id="confession-zoomable">
+              </div>
+            </div>
+            <div class="card-glow"></div>
+          </div>
+
+          <!-- Deep Translation & Romantic Breakdown -->
+          <div class="confession-text-card">
+            <div class="quote-icon">“</div>
+            <blockquote class="arabic-quote">
+              "بس بصراحة عمري ما حبيت واحدة كدة.. عارفة لما تحبي حد عشان نفسه مش عشان شكله ولا حلوة ولا وحشة، لا أنا بحبها هي ذات نفسها حرفياً.. مش عايز أي حاجة منها، وبدعي ربنا تكون دي نصيبي."
+              <footer class="arabic-quote-footer">
+                <span class="quote-reply">— مين؟</span>
+                <span class="quote-answer">— اسمها ليلي ❤️</span>
+              </footer>
+            </blockquote>
+
+            <div class="confession-explanation">
+              <div class="explanation-pill">
+                <span class="pill-icon">✨</span>
+                <strong>What this means to me:</strong>
+              </div>
+              <p>
+                I never fell in love with just a pretty face or temporary things. I fell in love with <em>you</em> — your soul, your heart, your essence, the very person you are.
+              </p>
+              <p>
+                I don't want anything from this world other than your happiness, and my deepest prayer every day is that God makes you my forever destiny.
+              </p>
+            </div>
+
+            <div class="confession-features">
+              <div class="feat-item">
+                <span class="feat-icon">🌙</span>
+                <div>
+                  <h4>5:08 AM Thoughts</h4>
+                  <p>When the world is asleep, you are all I think about.</p>
+                </div>
+              </div>
+              <div class="feat-item">
+                <span class="feat-icon">🤲</span>
+                <div>
+                  <h4>My Constant Du'a</h4>
+                  <p>Praying that our paths are joined for this life and Jannah.</p>
+                </div>
+              </div>
+              <div class="feat-item">
+                <span class="feat-icon">💍</span>
+                <div>
+                  <h4>Naseeby & My All</h4>
+                  <p>You are not an accident; you are my chosen destiny.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: OUR MEMORIES & MEDIA VAULT -->
+    <section id="gallery-section" class="section gallery-section">
+      <div class="section-container">
+        <div class="section-badge">Captured Moments</div>
+        <h2 class="section-title">Memories With My Favorite Person</h2>
+        <p class="section-subtitle">
+          Every photo, every late-night call, every smile we shared — saved in my heart forever.
+        </p>
+
+        <div class="gallery-grid">
+          
+          <!-- Item 1: Cafe Smile -->
+          <div class="gallery-card" data-index="0" data-caption="Sitting with you, smiling across the table with our drinks. The way you look at me makes every worry disappear." data-title="Our Moments">
+            <div class="gallery-media-wrap">
+              <img src="media/cafe_together.jpg" alt="Lily and me sharing coffee and laughs" loading="lazy">
+              <div class="media-overlay">
+                <span class="overlay-icon">🔍 View Memory</span>
+              </div>
+            </div>
+            <div class="gallery-info">
+              <div class="gallery-tag">Together</div>
+              <h3 class="gallery-card-title">Our Pure Joy & Smiles</h3>
+              <p class="gallery-card-desc">Nothing in this entire world compares to having coffee (and strwaberry juice) with you and seeing your eyes light up when you laugh.</p>
+            </div>
+          </div>
+
+          <!-- Item 2: Night Together -->
+          <div class="gallery-card" data-index="1" data-caption="Standing side by side with you at night. Feeling your warmth beside me is the greatest feeling on earth." data-title="Under The Night Lights">
+            <div class="gallery-media-wrap">
+              <img src="media/night_together.jpg" alt="Lily and me standing together outside at night" loading="lazy">
+              <div class="media-overlay">
+                <span class="overlay-icon">🔍 View Memory</span>
+              </div>
+            </div>
+            <div class="gallery-info">
+              <div class="gallery-tag">Under The Stars</div>
+              <h3 class="gallery-card-title">Side By Side With You</h3>
+              <p class="gallery-card-desc">Standing next to you, holding our drinks, knowing that the prettiest girl in the world chose to walk beside me.</p>
+            </div>
+          </div>
+
+          <!-- Item 3: 4:55 AM Car Call -->
+          <div class="gallery-card" data-index="2" data-caption="4:55 AM drive through the night. 29 minutes and 5 seconds with 'Lily ❤️' on my dashboard screen. Your voice is my peace." data-title="4:55 AM Night Rides">
+            <div class="gallery-media-wrap">
+              <img src="media/car_call.jpg" alt="Car screen call with Lily at 4:55 AM" loading="lazy">
+              <div class="media-overlay">
+                <span class="overlay-icon">🔍 View Memory</span>
+              </div>
+            </div>
+            <div class="gallery-info">
+              <div class="gallery-tag">Late Nights</div>
+              <h3 class="gallery-card-title">4:55 AM • Lily ❤️ (29:05)</h3>
+              <p class="gallery-card-desc">Cruising alone in the quiet night, with your soft voice filling the car. Those late-night calls are my favorite part of the day.</p>
+            </div>
+          </div>
+
+          <!-- Item 4: Facetime Call -->
+          <div class="gallery-card" data-index="3" data-caption="Looking at your face on my phone screen. 25 minutes of staring at perfection on the stairs." data-title="FaceTime On The Stairs">
+            <div class="gallery-media-wrap">
+              <img src="media/stairs_call.jpg" alt="Phone call screen with photo of Lily on stairs" loading="lazy">
+              <div class="media-overlay">
+                <span class="overlay-icon">🔍 View Memory</span>
+              </div>
+            </div>
+            <div class="gallery-info">
+              <div class="gallery-tag">Endless Calls</div>
+              <h3 class="gallery-card-title">Lily ❤️ (25:34)</h3>
+              <p class="gallery-card-desc">Every time you answer my call, my whole day becomes better. You look breathtaking effortlessly, always.</p>
+            </div>
+          </div>
+
+          <!-- Item 5: Video Highlight (Featured Wide Card) -->
+          <div class="gallery-card featured-video-card" data-index="4" data-caption="A special video of our moments together. Moving memories that are etched in my mind forever." data-title="Our Motion Memory">
+            <div class="gallery-media-wrap video-container">
+              <video id="featured-video" playsinline preload="metadata" loop poster="media/night_together.jpg">
+                <source src="media/our_video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <div class="video-custom-controls">
+                <button class="vid-btn" id="vid-play-btn" aria-label="Play Video">▶ Play Clip</button>
+                <button class="vid-btn" id="vid-sound-btn" aria-label="Toggle Sound">🔊 Sound</button>
+              </div>
+            </div>
+            <div class="gallery-info">
+              <div class="gallery-tag video-tag">🎬 Live Memory</div>
+              <h3 class="gallery-card-title">Our Story In Motion</h3>
+              <p class="gallery-card-desc">A real piece of time frozen forever. Click play to re-live this precious moment of our lives together.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: WHY LILY MEANS LIFE TO ME -->
+    <section id="reasons-section" class="section reasons-section">
+      <div class="section-container">
+        <div class="section-badge">From The Depths Of My Heart</div>
+        <h2 class="section-title">Why Lily Means Life To Me</h2>
+        <p class="section-subtitle">
+          Hover over or tap any card to reveal why you are the only one for me.
+        </p>
+
+        <div class="reasons-grid">
+          
+          <div class="reason-card">
+            <div class="reason-num">01</div>
+            <div class="reason-icon">🌸</div>
+            <h3 class="reason-title">Your Pure Soul</h3>
+            <p class="reason-body">You have the gentlest, purest heart I have ever known. I fell in love with WHO you are deep inside, beyond anything external.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">02</div>
+            <div class="reason-icon">📞</div>
+            <h3 class="reason-title">Our Calls</h3>
+            <p class="reason-body">From 4 AM to sunrise, talking about everything and nothing. Thirty minutes feel like three seconds whenever I am talking to you.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">03</div>
+            <div class="reason-icon">✨</div>
+            <h3 class="reason-title">Your Laugh</h3>
+            <p class="reason-body">Hearing you chuckle or giggle is the sweetest melody. It instantly melts all my stress and makes me smile without even noticing.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">04</div>
+            <div class="reason-icon">🛡️</div>
+            <h3 class="reason-title">أنا ضهرك ومعاكي</h3>
+            <p class="reason-body">Just like Bahaa Sultan sings, I will always be your backbone, your safe haven, your shelter against the storm, and your number one supporter.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">05</div>
+            <div class="reason-icon">🤲</div>
+            <h3 class="reason-title">My Sincere Du'a</h3>
+            <p class="reason-body">Every prayer I make to Allah carries your name: "Ya Rab tkoon dy naseeby". My heart has chosen you, and it will never seek anyone else.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">06</div>
+            <div class="reason-icon">🚗</div>
+            <h3 class="reason-title">Every Journey With You</h3>
+            <p class="reason-body">Whether you are sitting next to me or your name is lighting up my car screen via Bluetooth, every road is beautiful because of you.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">07</div>
+            <div class="reason-icon">🌟</div>
+            <h3 class="reason-title">Your Natural Beauty</h3>
+            <p class="reason-body">You don't even have to try. The way you carry yourself, the way your dark hair falls, the light in your eyes — you take my breath away every time.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">08</div>
+            <div class="reason-icon">🏡</div>
+            <h3 class="reason-title">My Home & Safe Space</h3>
+            <p class="reason-body">Home isn't a place with four walls anymore. Home is wherever Lily is. In your presence, I am completely myself and at ease.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">09</div>
+            <div class="reason-icon">🤍</div>
+            <h3 class="reason-title">I Want Nothing But You</h3>
+            <p class="reason-body">Just like I said in my message, I literally don't want anything from you. I just want to love you, cherish you, and make you the happiest girl.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">10</div>
+            <div class="reason-icon">🔥</div>
+            <h3 class="reason-title">Growing Stronger Since 2023</h3>
+            <p class="reason-body">From 24/10/2023 to today, my feelings haven't faded for a fraction of a second. Every sunrise makes me fall in love with you all over again.</p>
+          </div>
+
+          <div class="reason-card">
+            <div class="reason-num">11</div>
+            <div class="reason-icon">♾️</div>
+            <h3 class="reason-title">My Forever & Always</h3>
+            <p class="reason-body">You are not just a chapter in my book; you are the entire story. Lily, you are my beginning, my present, and my eternal future.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: THE LOVE LETTER (PARCHMENT / WAX SEAL) -->
+    <section id="letter-section" class="section letter-section">
+      <div class="section-container">
+        <div class="section-badge">To My Favorite Girl</div>
+        <h2 class="section-title">A Letter From My Soul</h2>
+
+        <div class="parchment-wrapper">
+          <div class="parchment-card">
+            <div class="parchment-decor-top">❦ ❧</div>
+
+            <div class="parchment-header">
+              <h3 class="parchment-salutation">My Dearest Lily,</h3>
+              <span class="parchment-meta">October 24, 2023 ➔ Eternity</span>
+            </div>
+
+            <div class="parchment-body">
+              <p>
+                If I had to write down every reason why I love you, all the pages in the world wouldn't be enough. You came into my life on October 24, 2023, and since that very day, everything around me made sense.
+              </p>
+              <p>
+                When I stayed up that night at 5 AM and typed those words: <em>"عمري ما حبيت واحدة كدة.. أنا بحبها هي ذات نفسها حرفياً مش عايز أي حاجة منها وبدعي ربنا تكون دي نصيبي"</em>, I wasn't just writing a message. I was voicing the most genuine truth my heart has ever known.
+              </p>
+              <p>
+                Lily, you are my joy when things get dark. You are my calm when my mind is racing. You are the smile that lights up my car at 4 in the morning, and the face I never get tired of looking at on my phone.
+              </p>
+              <p class="parchment-highlight">
+                أنا ضهرك وفي ضهرك ومعاكي في كل ثانية من حياتك.. مش هسيبك، ومش هقلل من حبي ليكي، وهفضل شايلك في قلبي وفي عيني طول ما فيا نفس.
+              </p>
+              <p>
+                Thank you for being my girlfriend, my best friend, my soulmate, and my whole universe.
+              </p>
+            </div>
+
+            <div class="parchment-signature">
+              <div class="signature-line">
+                <span>With all my love, forever and endlessly,</span>
+                <span class="handwritten-sign">Your Biggest Lover ❤️</span>
+              </div>
+              <div class="parchment-wax-stamp">
+                <span>LILY</span>
+              </div>
+            </div>
+
+            <div class="parchment-decor-bottom">❦ ❧</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: THE LILY LOVE MACHINE (INTERACTIVE TOYS) -->
+    <section id="love-machine-section" class="section love-machine-section">
+      <div class="section-container">
+        <div class="section-badge">Interactive Love Zone</div>
+        <h2 class="section-title">The Lily Love Experience</h2>
+        <p class="section-subtitle">A few little surprises made just to make you smile!</p>
+
+        <div class="toys-grid">
+          
+          <!-- Toy 1: Infinite Love Meter -->
+          <div class="toy-card" id="love-meter-card">
+            <div class="toy-icon">📈</div>
+            <h3>How Much Do I Love Lily?</h3>
+            <p>Click the button below to test my love level for you:</p>
+            
+            <div class="meter-bar-container">
+              <div class="meter-bar" id="love-meter-fill"></div>
+              <span class="meter-label" id="love-meter-text">0%</span>
+            </div>
+
+            <button id="measure-love-btn" class="toy-btn">
+              <span>Calculate Love Level ❤️</span>
+            </button>
+            <div id="meter-result-message" class="toy-message"></div>
+          </div>
+
+          <!-- Toy 2: Secret Love Note Generator -->
+          <div class="toy-card" id="secret-notes-card">
+            <div class="toy-icon">🔮</div>
+            <h3>A Random Sweet Note For Lily</h3>
+            <p>Every time you press the button, you get a new love note written for you:</p>
+            
+            <div class="note-box" id="random-note-box">
+              "You are the most precious girl in my universe. Always remember that."
+            </div>
+
+            <button id="new-note-btn" class="toy-btn">
+              <span>Get Another Love Note ✨</span>
+            </button>
+          </div>
+
+          <!-- Toy 3: Will You Always Be Mine? -->
+          <div class="toy-card proposal-card" id="proposal-toy-card">
+            <div class="toy-icon">💍</div>
+            <h3>A Question For You, Lily:</h3>
+            <p class="proposal-question">Will you stay by my side and be my forever naseeb?</p>
+            
+            <div class="proposal-buttons">
+              <button id="proposal-yes-btn" class="proposal-btn yes-btn">
+                <span>YES ❤️</span>
+              </button>
+              <button id="proposal-no-btn" class="proposal-btn no-btn">
+                <span>NO 🥺</span>
+              </button>
+            </div>
+            <div id="proposal-celebration" class="toy-message celebration-msg"></div>
+            <div id="proposal-saved-badge" class="saved-status-badge"></div>
+          </div>
+
+          <!-- Toy 4: Leave A Note For Me (Lily's Note to the User) -->
+          <div class="toy-card lily-note-card" id="lily-note-card">
+            <div class="toy-icon">💌</div>
+            <h3>A Note From Lily To Me</h3>
+            <p>Leave a special note, your thoughts, or a secret message for me:</p>
+            
+            <div class="lily-note-form">
+              <div class="mood-chips">
+                <button type="button" class="mood-chip active" data-mood="I love you so much ❤️">❤️ I love you</button>
+                <button type="button" class="mood-chip" data-mood="Forever yours ✨">✨ Forever</button>
+                <button type="button" class="mood-chip" data-mood="Miss you 🥺">🥺 Miss you</button>
+                <button type="button" class="mood-chip" data-mood="Thinking of you 💭">💭 Thinking of you</button>
+              </div>
+              <textarea id="lily-note-input" class="lily-note-textarea" placeholder="Write whatever is in your heart, Lily... ❤️" rows="4"></textarea>
+              <button id="send-lily-note-btn" class="toy-btn send-note-btn">
+                <span id="send-note-btn-text">Send Note To My Heart 💌</span>
+              </button>
+              <div id="lily-note-status" class="toy-message note-status"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-heart">💖</div>
+        <h2 class="footer-title">Lily, You Are My Whole World</h2>
+        <p class="footer-date">In love since October 24, 2023 • Forever and ever</p>
+        <p class="footer-song-ref">Song: "أنا ضهرك وفي ضهرك ومعاكي" — بهاء سلطان</p>
+        <div class="footer-actions">
+          <button id="back-to-top-btn" class="btn-footer">Back to Top ↑</button>
+          <button id="fireworks-btn" class="btn-footer">Launch Love Fireworks 🎆</button>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- LIGHTBOX MODAL FOR HIGH-RES VIEWING            -->
+  <!-- ============================================== -->
+  <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
+    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Close Lightbox">✕</button>
+      <div class="lightbox-media-container" id="lightbox-media-container">
+        <!-- Injected via JS -->
+      </div>
+      <div class="lightbox-caption-box">
+        <h3 id="lightbox-title"></h3>
+        <p id="lightbox-caption"></p>
+        <button id="lightbox-heart-btn" class="btn-lightbox-heart">Send Love to this Memory ❤️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Client Library for saving Lily's responses -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Load YouTube Iframe API Script -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <!-- Main Script -->
+  <script src="app.js"></script>
+</body>
+</html>
